@@ -1,8 +1,9 @@
 var express = require("express");
 var router = express.Router();
 let userController = require('../controllers/users')
-let { RegisterValidator, validationResult } = require('../utils/validatorHandler')
+let { RegisterValidator, ChangePasswordValidator, validationResult } = require('../utils/validatorHandler')
 let { CheckLogin } = require('../utils/authHandler')
+let { JWT_COOKIE_NAME, jwtCookieOptions, createAccessToken } = require('../utils/jwtHandler')
 
 router.post('/register', RegisterValidator, validationResult, async function (req, res, next) {
     try {
@@ -32,11 +33,14 @@ router.post('/login', async function (req, res, next) {
             res.status(403).send("sai thong tin dang nhap");
             return;
         }
-        res.cookie("LOGIN_NNPTUD_S3", result._id.toString().trimLeft().trimRight(), {
-            maxAge: 24 * 60 * 60 * 1000,
-            httpOnly: true
+
+        let token = createAccessToken(result);
+
+        res.cookie(JWT_COOKIE_NAME, token, jwtCookieOptions)
+        res.send({
+            userId: result._id,
+            token: token
         })
-        res.send(result._id)
 
     } catch (err) {
         res.status(400).send({ message: err.message });
@@ -47,11 +51,35 @@ router.get('/me', CheckLogin, function (req, res, next) {
     res.send(user)
 })
 router.post('/logout', CheckLogin, function (req, res, next) {
-    res.cookie("LOGIN_NNPTUD_S3", "", {
+    res.cookie(JWT_COOKIE_NAME, "", {
         maxAge: 0,
-        httpOnly: true
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production'
     })
     res.send("da logout")
+})
+
+router.post('/change-password', CheckLogin, ChangePasswordValidator, validationResult, async function (req, res, next) {
+    try {
+        let { oldpassword, newpassword } = req.body;
+
+        if (!userController.ComparePassword(req.user, oldpassword)) {
+            res.status(403).send({ message: 'oldpassword khong dung' });
+            return;
+        }
+
+        await userController.ChangePassword(req.user, newpassword);
+
+        let token = createAccessToken(req.user);
+        res.cookie(JWT_COOKIE_NAME, token, jwtCookieOptions);
+        res.send({
+            message: 'doi mat khau thanh cong',
+            token: token
+        });
+    } catch (err) {
+        res.status(400).send({ message: err.message });
+    }
 })
 
 module.exports = router;

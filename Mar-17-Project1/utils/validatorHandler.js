@@ -9,12 +9,21 @@ let options = {
         minSymbols: 1
     }
 }
+
+function buildPasswordRule(fieldName) {
+    return body(fieldName)
+        .notEmpty().withMessage(`${fieldName} khong duoc de trong`)
+        .bail()
+        .isStrongPassword(options.password)
+        .withMessage(`password dai it nhat ${options.password.minLength} ki tu,trong do it nhat ${options.password.minUppercase} chu hoa, ${options.password.minLowercase} chu thuong, ${options.password.minNumbers} so, ${options.password.minSymbols} ki tu`)
+}
+
 module.exports = {
     CreateUserValidator: [
         body('email').notEmpty().withMessage("email khong duoc de trong").bail().isEmail().withMessage("email sai dinh dang"),
         body('role').notEmpty().withMessage("role khong duoc de trong").bail().isMongoId().withMessage("role phai la object ID "),
         body('username').notEmpty().withMessage("username khong duoc de trong").bail().isAlphanumeric().withMessage("username chi duoc chua chu va ki tu"),
-        body('password').notEmpty().withMessage("username khong duoc de trong").bail().isStrongPassword(options.password).withMessage(`password dai it nhat ${options.password.minLength} ki tu,trong do it nhat ${options.password.minUppercase} chu hoa, ${options.password.minLowercase} chu thuong, ${options.password.minNumbers} so, ${options.password.minSymbols} ki tu`),
+        buildPasswordRule('password'),
         body('avatarUrl').optional().isURL().withMessage("url sai dinh dang")
     ],
     CreateRoleValidator: [
@@ -22,9 +31,19 @@ module.exports = {
     ], RegisterValidator: [
         body('email').notEmpty().withMessage("email khong duoc de trong").bail().isEmail().withMessage("email sai dinh dang"),
         body('username').notEmpty().withMessage("username khong duoc de trong").bail().isAlphanumeric().withMessage("username chi duoc chua chu va ki tu"),
-        body('password').notEmpty().withMessage("username khong duoc de trong").bail().isStrongPassword(options.password).withMessage(`password dai it nhat ${options.password.minLength} ki tu,trong do it nhat ${options.password.minUppercase} chu hoa, ${options.password.minLowercase} chu thuong, ${options.password.minNumbers} so, ${options.password.minSymbols} ki tu`),
-    ]
-    ,
+        buildPasswordRule('password'),
+    ],
+    ChangePasswordValidator: [
+        body('oldpassword').notEmpty().withMessage('oldpassword khong duoc de trong'),
+        buildPasswordRule('newpassword'),
+        body('newpassword').custom((value, { req }) => {
+            if (value === req.body.oldpassword) {
+                throw new Error('newpassword khong duoc trung oldpassword');
+            }
+
+            return true;
+        })
+    ],
     validationResult: function (req, res, next) {
         let result = validationResult(req);
         if (result.errors.length > 0) {

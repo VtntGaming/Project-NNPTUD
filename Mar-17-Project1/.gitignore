@@ -57,5 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# generated RSA keys for JWT
+keys/*.key
+keys/*.pub
+
 # next.js build output
 .next

@@ -38,6 +38,14 @@ module.exports = {
         await user.save()
         return false;
     },
+    ComparePassword: function (user, password) {
+        return bcrypt.compareSync(password, user.password);
+    },
+    ChangePassword: async function (user, newPassword) {
+        user.password = newPassword;
+        await user.save();
+        return user;
+    },
     GetUserById: async function (id) {
         try {
             let user = await userModel.findOne({
