@@ -25,12 +25,18 @@ app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/messages', require('./routes/messages'));
 
-mongoose.connect('mongodb://localhost:27017/NNPTUD-S4');
+mongoose.connect('mongodb://localhost:27017/NNPTUD-S4')
+  .catch(function (error) {
+    console.error('mongodb connection error:', error.message);
+  });
 mongoose.connection.on('connected', function () {
   console.log("connected");
 })
 mongoose.connection.on('disconnected', function () {
   console.log("disconnected");
+})
+mongoose.connection.on('error', function (error) {
+  console.error('mongodb error:', error.message);
 })
 
 // catch 404 and forward to error handler
