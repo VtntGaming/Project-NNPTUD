@@ -1,0 +1,119 @@
+====================================================
+  HUONG DAN THAO TAC POSTMAN - PROJECT 31/03
+  Base URL: http://localhost:3000/api/v1
+====================================================
+
+LUU Y CHUNG:
+- Tat ca route /messages deu yeu cau dang nhap (token)
+- Sau khi login, copy token va dan vao Headers:
+    Key: Authorization
+    Value: <token>
+- Hoac dung cookie tu response login (tu dong neu dung Postman)
+
+====================================================
+1. DANG KY TAI KHOAN
+====================================================
+  Method : POST
+  URL    : {{base}}/auth/register
+  Body   : raw - JSON
+
+  {
+    "username": "user1",
+    "password": "123456",
+    "email": "user1@gmail.com"
+  }
+
+  => Tao them 1 tai khoan nua de test nhan tin:
+
+  {
+    "username": "user2",
+    "password": "123456",
+    "email": "user2@gmail.com"
+  }
+
+====================================================
+2. DANG NHAP
+====================================================
+  Method : POST
+  URL    : {{base}}/auth/login
+  Body   : raw - JSON
+
+  {
+    "username": "user1",
+    "password": "123456"
+  }
+
+  => Response tra ve token, copy token nay
+
+====================================================
+3. XEM THONG TIN USER HIEN TAI
+====================================================
+  Method  : GET
+  URL     : {{base}}/auth/me
+  Headers : Authorization: <token>
+
+  => Ghi lai _id cua user1 va user2 de dung cho buoc sau
+
+====================================================
+4. GUI TIN NHAN (TEXT)
+====================================================
+  Method  : POST
+  URL     : {{base}}/messages
+  Headers : Authorization: <token cua user1>
+  Body    : form-data
+
+  Key       | Value
+  ----------|----------------------------
+  to        | <_id cua user2>
+  text      | Xin chao ban!
+
+  => Gui tin nhan text tu user1 den user2
+
+====================================================
+5. GUI TIN NHAN (FILE)
+====================================================
+  Method  : POST
+  URL     : {{base}}/messages
+  Headers : Authorization: <token cua user1>
+  Body    : form-data
+
+  Key       | Type  | Value
+  ----------|-------|----------------------------
+  to        | Text  | <_id cua user2>
+  file      | File  | [Chon file tu may tinh]
+
+  => Neu co file thi type tu dong la "file", text la duong dan file
+
+====================================================
+6. LAY TOAN BO TIN NHAN GIUA 2 USER
+====================================================
+  Method  : GET
+  URL     : {{base}}/messages/<_id cua user2>
+  Headers : Authorization: <token cua user1>
+
+  => Tra ve tat ca tin nhan giua user1 va user2
+     (ca 2 chieu: user1->user2 va user2->user1)
+     Sap xep theo thoi gian tang dan
+
+====================================================
+7. LAY TIN NHAN CUOI CUNG CUA MOI CUOC TRO CHUYEN
+====================================================
+  Method  : GET
+  URL     : {{base}}/messages
+  Headers : Authorization: <token cua user1>
+
+  => Tra ve tin nhan cuoi cung cua moi user ma
+     user1 da tung nhan tin hoac duoc nhan tin
+     (giong danh sach cuoc tro chuyen)
+
+====================================================
+THU TU TEST:
+====================================================
+  Buoc 1: Dang ky 2 tai khoan (user1, user2)
+  Buoc 2: Dang nhap user1 -> lay token1
+  Buoc 3: Dang nhap user2 -> lay token2, ghi lai _id user2
+  Buoc 4: Dung token1, gui tin nhan text den user2
+  Buoc 5: Dung token2, gui tin nhan text den user1
+  Buoc 6: Dung token1, gui tin nhan file den user2
+  Buoc 7: Dung token1, lay toan bo tin nhan voi user2 (GET /:userID)
+  Buoc 8: Dung token1, lay danh sach cuoc tro chuyen (GET /)
